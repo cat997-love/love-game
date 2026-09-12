@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+        />
+        <title>若溪 · 奶茶店初遇</title>
+        <link rel="manifest" href="manifest.json" />
+        <meta name="theme-color" content="#b94e66" />
+        <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" href="icons/icon-192.png" />
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <main class="game-shell">
+            <section class="stage" id="stage">
+                <div class="grain"></div>
+                <div class="topbar">
+                    <div class="brand">
+                        <span class="brand-dot"></span>若溪
+                        <small>MILK TEA ENCOUNTER</small>
+                    </div>
+                    <div class="top-actions">
+                        <a href="locations.html" class="ghost-btn" id="mapBtn"
+                            >城市地图</a
+                        >
+                        <button id="saveBtn" class="ghost-btn">保存进度</button
+                        ><button id="restartBtn" class="ghost-btn">
+                            重新开始
+                        </button>
+                    </div>
+                </div>
+
+                <div class="chapter-line" id="chapter">第一章 · 奶茶店初遇</div>
+                <div class="clm">
+                    <div class="visual-panel" id="visualPanel">
+                        <div class="media-frame" id="mediaFrame">
+                            <img id="sceneImage" alt="剧情画面" />
+                            <video
+                                id="sceneVideo"
+                                playsinline
+                                controls
+                                muted
+                                loop
+                            ></video>
+                            <iframe
+                                id="sceneEmbed"
+                                title="剧情视频"
+                                allow="autoplay; fullscreen; picture-in-picture"
+                                allowfullscreen
+                            ></iframe>
+                            <div
+                                class="media-placeholder"
+                                id="mediaPlaceholder"
+                            >
+                                <span id="placeholderIcon">☕</span
+                                ><strong id="placeholderTitle">奶茶店</strong
+                                ><small
+                                    >把素材链接写入 script.js
+                                    后，会在这里播放或展示</small
+                                >
+                            </div>
+                            <p class="media-caption" id="mediaCaption"></p>
+                        </div>
+                    </div>
+                    <div class="action-panel">
+                        <div class="choices" id="choices"></div>
+                        <button class="continue-btn" id="continueBtn">
+                            继续 <span>→</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="dialogue-panel">
+                    <div class="dialogue-meta">
+                        <span id="lineNo">01 / 05</span
+                        ><span id="location">青柠奶茶店</span>
+                    </div>
+                    <div class="speaker-row">
+                        <span class="speaker-portrait" id="portrait">若</span>
+                        <div class="speaker-name">
+                            <strong id="speaker">沈若溪</strong>
+                            <small id="role">奶茶店打工的学姐</small>
+                        </div>
+                        <span class="affection" id="affection"></span>
+                    </div>
+                    <p class="dialogue" id="dialogue"></p>
+                </div>
+                <div class="progress"><span id="progressBar"></span></div>
+            </section>
+
+            <aside class="side-panel">
+                <div class="side-head">
+                    <p>若溪线</p>
+                    <span id="dayLabel">DAY 01</span>
+                </div>
+                <div class="goal-card">
+                    <span class="eyebrow">CURRENT OBJECTIVE</span
+                    ><strong id="objective">在奶茶店与若溪初次相遇</strong>
+                    <div class="mini-progress">
+                        <span id="objectiveProgress"></span>
+                    </div>
+                </div>
+                <div class="girls-title">
+                    <span>女主资料</span><em id="meetCount">1 / 1</em>
+                </div>
+                <div class="girl-list" id="girlList"></div>
+                <div class="asset-help">
+                    <strong>素材链接</strong>
+                    <p>
+                        图片填图片链接；视频填可直连的 MP4/WebM
+                        链接。YouTube、哔哩哔哩等页面链接请用嵌入链接，并将 type
+                        改为 <code>embed</code>。
+                    </p>
+                </div>
+                <div class="quote">
+                    “一次意外打翻的奶茶，可能就是故事真正开始的声音。”
+                </div>
+                <div class="footer-note">
+                    后续剧情可继续在 script.js 中补充。
+                </div>
+            </aside>
+        </main>
+        <div class="toast" id="toast"></div>
+        <script src="script.js"></script>
+        <script>
+            if (
+                'serviceWorker' in navigator &&
+                !location.protocol.startsWith('file')
+            ) {
+                navigator.serviceWorker.register('sw.js').catch(() => {});
+            }
+        </script>
+    </body>
+</html>

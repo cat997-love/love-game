@@ -1,0 +1,64 @@
+{
+    "name": "ruoxi-milk-tea-game",
+    "productName": "若溪 · 奶茶店初遇",
+    "version": "1.0.0",
+    "description": "若溪线恋爱剧情游戏（PC 横屏）",
+    "main": "electron/main.js",
+    "author": "love-game",
+    "license": "UNLICENSED",
+    "private": true,
+    "scripts": {
+        "start": "electron .",
+        "dist": "electron-builder --win"
+    },
+    "devDependencies": {
+        "electron": "^33.4.11",
+        "electron-builder": "^25.1.8"
+    },
+    "build": {
+        "appId": "com.lovegame.ruoxi",
+        "productName": "若溪 · 奶茶店初遇",
+        "directories": {
+            "output": "release",
+            "buildResources": "electron/buildResources"
+        },
+        "files": [
+            "electron/main.js",
+            "index.html",
+            "locations.html",
+            "script.js",
+            "style.css",
+            "manifest.json",
+            "sw.js",
+            "icons/**",
+            "assets/**",
+            "videos/**",
+            "!node_modules/**"
+        ],
+        "win": {
+            "target": [
+                {
+                    "target": "portable",
+                    "arch": [
+                        "x64"
+                    ]
+                },
+                {
+                    "target": "nsis",
+                    "arch": [
+                        "x64"
+                    ]
+                }
+            ],
+            "signAndEditExecutable": false
+        },
+        "portable": {
+            "artifactName": "若溪奶茶店初遇-Portable-${version}.exe"
+        },
+        "nsis": {
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true,
+            "artifactName": "若溪奶茶店初遇-Setup-${version}.exe"
+        }
+    }
+}

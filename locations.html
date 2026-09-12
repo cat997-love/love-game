@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+        />
+        <title>星澜市 · 城市地图</title>
+        <link rel="manifest" href="manifest.json" />
+        <meta name="theme-color" content="#b94e66" />
+        <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" href="icons/icon-192.png" />
+        <style>
+            :root {
+                --bg: #fff8f1;
+                --ink: #3d2c31;
+                --muted: #9c8589;
+                --rose: #cf5f73;
+                --rose-dark: #b94e66;
+                --line: rgba(112, 73, 78, 0.14);
+                --shadow: 0 18px 42px rgba(82, 48, 55, 0.1);
+            }
+            * {
+                box-sizing: border-box;
+            }
+            html,
+            body {
+                width: 100%;
+                margin: 0;
+            }
+            body {
+                min-height: 100vh;
+                color: var(--ink);
+                font-family:
+                    Inter, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+                background: radial-gradient(
+                    circle at 12% 6%,
+                    #fff 0,
+                    #fff8f1 35%,
+                    #f7e7df 100%
+                );
+                padding: calc(24px + env(safe-area-inset-top))
+                    clamp(16px, 4vw, 40px)
+                    calc(32px + env(safe-area-inset-bottom));
+            }
+            button {
+                font: inherit;
+            }
+            button:focus-visible {
+                outline: 3px solid rgba(207, 95, 115, 0.35);
+                outline-offset: 3px;
+            }
+
+            .map-shell {
+                max-width: 1080px;
+                margin: 0 auto;
+            }
+            .map-head {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: baseline;
+                justify-content: space-between;
+                gap: 10px;
+                margin-bottom: 6px;
+            }
+            .map-title {
+                color: #6b2f3a;
+                font-family: Georgia, 'Songti SC', serif;
+                font-size: clamp(26px, 3.4vw, 38px);
+                font-weight: 800;
+                letter-spacing: 0.02em;
+            }
+            .map-title small {
+                display: inline-block;
+                margin-left: 12px;
+                color: #c98d97;
+                font-family: Georgia, serif;
+                font-size: clamp(12px, 1.4vw, 16px);
+                font-weight: 400;
+                letter-spacing: 0.12em;
+                vertical-align: 4px;
+            }
+            .map-sub {
+                margin: 0 0 22px;
+                color: var(--muted);
+                font-size: 13px;
+                line-height: 1.7;
+            }
+
+            .loc-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                gap: 16px;
+            }
+            .loc-card {
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                padding: 18px;
+                overflow: hidden;
+                border: 1px solid var(--line);
+                border-radius: 18px;
+                background: rgba(255, 255, 255, 0.82);
+                box-shadow: 0 10px 26px rgba(82, 48, 55, 0.07);
+                transition:
+                    transform 0.2s ease,
+                    box-shadow 0.2s ease;
+            }
+            .loc-card:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow);
+            }
+            .loc-icon {
+                display: grid;
+                place-items: center;
+                width: 46px;
+                height: 46px;
+                border-radius: 14px;
+                font-size: 24px;
+                background: linear-gradient(135deg, #ffe3e8, #ffd9c4);
+            }
+            .loc-card h2 {
+                margin: 2px 0 0;
+                font-family: Georgia, 'Songti SC', serif;
+                font-size: 18px;
+            }
+            .loc-card p {
+                margin: 0;
+                color: var(--muted);
+                font-size: 12px;
+                line-height: 1.7;
+            }
+            .loc-tag {
+                position: absolute;
+                top: 16px;
+                right: 16px;
+                padding: 3px 10px;
+                border-radius: 999px;
+                color: #b94e66;
+                font-size: 10px;
+                font-weight: 800;
+                letter-spacing: 0.1em;
+                background: #ffe9ee;
+            }
+            .loc-tag.lock {
+                color: #9c8589;
+                background: #f3e9e6;
+            }
+
+            /* 商场：可展开的内部门店列表 */
+            .loc-card.mall {
+                grid-column: 1 / -1;
+                background: rgba(255, 255, 255, 0.92);
+            }
+            .mall-toggle {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                width: 100%;
+                border: 0;
+                padding: 0;
+                color: inherit;
+                text-align: left;
+                background: none;
+                cursor: pointer;
+            }
+            .mall-toggle .chev {
+                margin-left: auto;
+                color: #c05a70;
+                font-size: 14px;
+                transition: transform 0.25s ease;
+            }
+            .loc-card.mall.open .chev {
+                transform: rotate(180deg);
+            }
+            .shop-list {
+                display: none;
+                grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+                gap: 12px;
+                margin-top: 14px;
+            }
+            .loc-card.mall.open .shop-list {
+                display: grid;
+            }
+            .shop {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                width: 100%;
+                border: 1px solid var(--line);
+                border-radius: 14px;
+                padding: 12px 14px;
+                color: inherit;
+                text-align: left;
+                background: #fffaf7;
+                cursor: pointer;
+                transition:
+                    border-color 0.2s ease,
+                    background 0.2s ease,
+                    transform 0.2s ease;
+            }
+            .shop:hover {
+                border-color: #df7d8d;
+                background: #fff6f7;
+                transform: translateX(2px);
+            }
+            .shop span {
+                font-size: 20px;
+            }
+            .shop strong {
+                display: block;
+                font-size: 14px;
+            }
+            .shop small {
+                display: block;
+                margin-top: 2px;
+                color: var(--muted);
+                font-size: 11px;
+            }
+            .shop.locked {
+                cursor: default;
+                opacity: 0.6;
+            }
+            .shop.locked:hover {
+                border-color: var(--line);
+                background: #fffaf7;
+                transform: none;
+            }
+            .shop .floor {
+                margin-left: auto;
+                color: #c05a70;
+                font-size: 11px;
+                font-weight: 700;
+                white-space: nowrap;
+            }
+            .shop.tea {
+                position: relative;
+                border-color: rgba(207, 95, 115, 0.45);
+                background: linear-gradient(135deg, #fff1f3, #ffe8dc);
+                box-shadow: 0 8px 20px rgba(191, 78, 100, 0.12);
+            }
+            .shop.tea::after {
+                content: '可进入';
+                position: absolute;
+                top: -8px;
+                right: 10px;
+                padding: 2px 9px;
+                border-radius: 999px;
+                color: #fff;
+                font-size: 10px;
+                font-weight: 800;
+                letter-spacing: 0.08em;
+                background: linear-gradient(90deg, #d96076, #b94e66);
+                box-shadow: 0 4px 10px rgba(191, 78, 100, 0.3);
+            }
+
+            /* 详情弹层 */
+            .overlay {
+                position: fixed;
+                inset: 0;
+                z-index: 10;
+                display: none;
+                place-items: center;
+                padding: 20px;
+                background: rgba(61, 36, 43, 0.42);
+                backdrop-filter: blur(3px);
+            }
+            .overlay.show {
+                display: grid;
+            }
+            .detail {
+                width: min(440px, 100%);
+                padding: 26px 26px 22px;
+                border: 1px solid var(--line);
+                border-radius: 22px;
+                background: #fffdfa;
+                box-shadow: 0 26px 60px rgba(50, 25, 35, 0.3);
+                animation: pop-in 0.28s ease both;
+            }
+            @keyframes pop-in {
+                from {
+                    opacity: 0;
+                    transform: translateY(14px) scale(0.97);
+                }
+                to {
+                    opacity: 1;
+                    transform: none;
+                }
+            }
+            .detail-head {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+            }
+            .detail-icon {
+                display: grid;
+                place-items: center;
+                width: 54px;
+                height: 54px;
+                border-radius: 16px;
+                font-size: 28px;
+                background: linear-gradient(135deg, #f2a7bd, #9a86e8);
+            }
+            .detail-head h3 {
+                margin: 0;
+                font-family: Georgia, 'Songti SC', serif;
+                font-size: 21px;
+            }
+            .detail-head small {
+                display: block;
+                margin-top: 3px;
+                color: var(--muted);
+                font-size: 12px;
+            }
+            .detail-desc {
+                margin: 14px 0 18px;
+                color: #6b5157;
+                font-size: 13px;
+                line-height: 1.8;
+            }
+            .detail-opts {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+            .opt-btn {
+                display: flex;
+                align-items: center;
+                gap: 11px;
+                border: 1px solid rgba(207, 95, 115, 0.18);
+                border-radius: 999px;
+                padding: 13px 16px 13px 12px;
+                color: #7b414b;
+                font-size: 15px;
+                text-align: left;
+                text-decoration: none;
+                background: rgba(255, 248, 249, 0.94);
+                box-shadow: 0 6px 16px rgba(81, 45, 61, 0.06);
+                cursor: pointer;
+                transition:
+                    transform 0.2s ease,
+                    background 0.2s ease,
+                    border-color 0.2s ease,
+                    box-shadow 0.2s ease;
+            }
+            .opt-btn::before {
+                content: attr(data-key);
+                display: grid;
+                place-items: center;
+                flex: 0 0 auto;
+                width: 28px;
+                height: 28px;
+                border-radius: 50%;
+                color: #fff;
+                font-size: 12px;
+                font-weight: 800;
+                background: linear-gradient(135deg, #e08a9b, #c65a72);
+            }
+            .opt-btn:hover {
+                border-color: #df7d8d;
+                background: #fff6f7;
+                transform: translateX(3px);
+                box-shadow: 0 8px 20px rgba(81, 45, 61, 0.1);
+            }
+            .opt-btn.primary {
+                color: #fff;
+                border-color: transparent;
+                font-weight: 800;
+                background: linear-gradient(90deg, #d96076, #b94e66);
+                box-shadow: 0 10px 22px rgba(191, 78, 100, 0.24);
+            }
+            .opt-btn.primary::before {
+                background: rgba(255, 255, 255, 0.22);
+                box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+            }
+            .opt-btn.primary:hover {
+                filter: saturate(1.08) brightness(1.04);
+                transform: translateY(-1px);
+            }
+            .opt-btn.ghost {
+                color: #9c8589;
+                border-style: dashed;
+                background: none;
+                box-shadow: none;
+            }
+            .opt-btn.ghost::before {
+                background: #e5d8da;
+            }
+            .detail-close {
+                display: block;
+                width: 100%;
+                margin-top: 14px;
+                border: 0;
+                border-radius: 999px;
+                padding: 10px;
+                color: #b06a76;
+                font-size: 13px;
+                background: #fbeef0;
+                cursor: pointer;
+                transition: background 0.2s ease;
+            }
+            .detail-close:hover {
+                background: #f7e2e6;
+            }
+
+            @media (max-width: 560px) {
+                .loc-grid {
+                    grid-template-columns: 1fr;
+                }
+                .detail {
+                    padding: 20px 18px 18px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <main class="map-shell">
+            <div class="map-head">
+                <h1 class="map-title">星澜市<small>CITY MAP</small></h1>
+                <span class="loc-tag">DAY 01 · 午后</span>
+            </div>
+            <p class="map-sub">
+                今天是到这座城市的第一个周末。地图上亮着的地方，都可能在午后遇见你。
+            </p>
+
+            <div class="loc-grid">
+                <div class="loc-card mall open" id="mallCard">
+                    <button
+                        class="mall-toggle"
+                        id="mallToggle"
+                        aria-expanded="true"
+                        aria-controls="mallShops"
+                    >
+                        <span class="loc-icon">🏬</span>
+                        <div>
+                            <h2>青柠广场</h2>
+                            <p>城中最大的商场，玻璃幕墙映着午后的云。</p>
+                        </div>
+                        <span class="chev">▾</span>
+                    </button>
+                    <div class="shop-list" id="mallShops">
+                        <button class="shop tea" data-shop="tea">
+                            <span>🧋</span>
+                            <div>
+                                <strong>青柠奶茶店</strong
+                                ><small>奶茶 · 轻食</small>
+                            </div>
+                            <em class="floor">3F</em>
+                        </button>
+                        <button class="shop locked">
+                            <span>📚</span>
+                            <div>
+                                <strong>星野书店</strong
+                                ><small>暂未开放剧情</small>
+                            </div>
+                            <em class="floor">B1</em>
+                        </button>
+                        <button class="shop locked">
+                            <span>🎬</span>
+                            <div>
+                                <strong>光影影城</strong
+                                ><small>暂未开放剧情</small>
+                            </div>
+                            <em class="floor">5F</em>
+                        </button>
+                        <button class="shop locked">
+                            <span>🍜</span>
+                            <div>
+                                <strong>时鲜食集</strong
+                                ><small>暂未开放剧情</small>
+                            </div>
+                            <em class="floor">4F</em>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="loc-card">
+                    <span class="loc-icon">🎓</span>
+                    <h2>南城大学</h2>
+                    <p>梧桐夹道的老校区，若溪学姐就读的地方。</p>
+                    <span class="loc-tag lock">敬请期待</span>
+                </div>
+                <div class="loc-card">
+                    <span class="loc-icon">🌳</span>
+                    <h2>滨江公园</h2>
+                    <p>江边有长长的木栈道，傍晚的风很温柔。</p>
+                    <span class="loc-tag lock">敬请期待</span>
+                </div>
+                <div class="loc-card">
+                    <span class="loc-icon">☕</span>
+                    <h2>云顶咖啡厅</h2>
+                    <p>写字楼顶层的安静角落，靠窗能看见整条江。</p>
+                    <span class="loc-tag lock">敬请期待</span>
+                </div>
+                <div class="loc-card">
+                    <span class="loc-icon">🚇</span>
+                    <h2>中央地铁站</h2>
+                    <p>城市的心脏，人潮里什么故事都可能发生。</p>
+                    <span class="loc-tag lock">敬请期待</span>
+                </div>
+                <div class="loc-card">
+                    <span class="loc-icon">🏮</span>
+                    <h2>老街夜市</h2>
+                    <p>入夜后才苏醒的街区，烟火气最抚人心。</p>
+                    <span class="loc-tag lock">敬请期待</span>
+                </div>
+            </div>
+        </main>
+
+        <div class="overlay" id="overlay">
+            <div
+                class="detail"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="detailTitle"
+            >
+                <div class="detail-head">
+                    <span class="detail-icon">🧋</span>
+                    <div>
+                        <h3 id="detailTitle">青柠奶茶店</h3>
+                        <small>青柠广场 · 3F | 空气里有焦糖和阳光的味道</small>
+                    </div>
+                </div>
+                <p class="detail-desc">
+                    午后的店里人不算多，柜台后的女孩正低头擦拭点单屏。你推开门，风铃轻轻响了一声——
+                </p>
+                <div class="detail-opts">
+                    <a class="opt-btn primary" data-key="A" href="index.html"
+                        >偶遇若溪</a
+                    >
+                    <button class="opt-btn ghost" data-key="B" id="laterBtn">
+                        改天再来
+                    </button>
+                </div>
+                <button class="detail-close" id="closeBtn">返回地图</button>
+            </div>
+        </div>
+
+        <script>
+            const mallCard = document.getElementById('mallCard');
+            const mallToggle = document.getElementById('mallToggle');
+            const overlay = document.getElementById('overlay');
+
+            mallToggle.onclick = () => {
+                const open = mallCard.classList.toggle('open');
+                mallToggle.setAttribute('aria-expanded', String(open));
+            };
+
+            document.querySelectorAll('.shop').forEach((shop) => {
+                shop.onclick = () => {
+                    if (!shop.classList.contains('tea')) return;
+                    overlay.classList.add('show');
+                };
+            });
+
+            document.getElementById('closeBtn').onclick = () =>
+                overlay.classList.remove('show');
+            document.getElementById('laterBtn').onclick = () =>
+                overlay.classList.remove('show');
+            overlay.onclick = (e) => {
+                if (e.target === overlay) overlay.classList.remove('show');
+            };
+
+            if (
+                'serviceWorker' in navigator &&
+                !location.protocol.startsWith('file')
+            ) {
+                navigator.serviceWorker.register('sw.js').catch(() => {});
+            }
+        </script>
+    </body>
+</html>
